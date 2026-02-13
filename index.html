@@ -3,12 +3,15 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>14 February Valentine card</title>
 
   <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
   <!-- we import arjs version without NFT but with marker + location based support -->
-  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@master/aframe/build/aframe-ar.js"></script>
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
@@ -17,6 +20,16 @@
       margin: 0;
       padding: 0;
       box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      position: fixed;
+      -webkit-overflow-scrolling: touch;
     }
 
     .arjs-loader {
@@ -139,19 +152,37 @@
     @media (max-width: 768px) {
       .loader-title {
         font-size: 1.5em;
+        padding: 0 20px;
       }
       .loader-subtitle {
         font-size: 0.9em;
+        padding: 0 20px;
       }
       .loader-spinner {
         width: 60px;
         height: 60px;
       }
     }
+
+    /* Mobile-specific fixes */
+    @media (max-width: 480px) {
+      .loader-title {
+        font-size: 1.2em;
+      }
+      .loader-subtitle {
+        font-size: 0.85em;
+      }
+    }
+
+    /* Prevent zoom on double tap */
+    a-scene {
+      touch-action: none;
+      -ms-touch-action: none;
+    }
   </style>
 </head>
 
-<body style="margin : 0px; overflow: hidden;">
+<body style="margin: 0px; padding: 0px; overflow: hidden; width: 100%; height: 100%; position: fixed;">
   <div class="arjs-loader">
     <div class="loader-content">
       <div class="loader-spinner">
@@ -163,15 +194,71 @@
       <div class="loader-subtitle">Please wait while we set everything up...</div>
     </div>
   </div>
-  <a-scene embedded arjs>
+  <a-scene 
+    vr-mode-ui="enabled: false"
+    renderer="logarithmicDepthBuffer: true; colorManagement: true"
+    arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; maxDetectionRate: 60; canvasWidth: 640; canvasHeight: 480; imageSmoothingEnabled: true;"
+    embedded
+    id="scene">
+    <a-assets>
+      <a-asset-item id="trex" src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/examples/image-tracking/nft/trex/scene.gltf"></a-asset-item>
+    </a-assets>
     <a-marker preset="hiro">
-      <a-entity position="0 0 0" scale="0.05 0.05 0.05"
-        gltf-model="https://raw.githack.com/AR-js-org/AR.js/master/aframe/examples/image-tracking/nft/trex/scene.gltf"></a-entity>
+      <a-entity 
+        position="0 0 0" 
+        scale="0.05 0.05 0.05"
+        gltf-model="#trex">
+      </a-entity>
     </a-marker>
     <a-entity camera></a-entity>
   </a-scene>
 
   <script>
+    // Check if device is mobile
+    function isMobile() {
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+             (window.innerWidth <= 768);
+    }
+
+    // Check if HTTPS is required (AR.js needs HTTPS on mobile except localhost)
+    function checkHTTPS() {
+      if (isMobile() && location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+        const loader = document.querySelector('.arjs-loader');
+        if (loader) {
+          loader.innerHTML = `
+            <div class="loader-content">
+              <div class="loader-title">⚠️ HTTPS Required</div>
+              <div class="loader-subtitle">AR.js requires HTTPS on mobile devices. Please use HTTPS or test on localhost.</div>
+            </div>
+          `;
+        }
+        return false;
+      }
+      return true;
+    }
+
+    // Request camera permissions
+    async function requestCameraPermission() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        // Stop the stream immediately, we just needed permission
+        stream.getTracks().forEach(track => track.stop());
+        return true;
+      } catch (error) {
+        console.error('Camera permission denied:', error);
+        const loader = document.querySelector('.arjs-loader');
+        if (loader) {
+          loader.innerHTML = `
+            <div class="loader-content">
+              <div class="loader-title">📷 Camera Access Required</div>
+              <div class="loader-subtitle">Please allow camera access to use AR features.</div>
+            </div>
+          `;
+        }
+        return false;
+      }
+    }
+
     function hideLoader() {
       const loader = document.querySelector('.arjs-loader');
       if (loader) {
@@ -182,16 +269,115 @@
       }
     }
 
-    window.addEventListener('arjs-video-loaded', function() {
-      hideLoader();
-    });
-    
-    // Fallback: hide loader after scene is loaded
-    document.querySelector('a-scene').addEventListener('loaded', function() {
-      setTimeout(function() {
+    // Initialize AR
+    async function initAR() {
+      if (!checkHTTPS()) {
+        return;
+      }
+
+      const scene = document.querySelector('a-scene');
+      if (!scene) {
+        console.error('Scene not found');
+        return;
+      }
+
+      // Request camera permission on mobile
+      if (isMobile()) {
+        try {
+          const hasPermission = await requestCameraPermission();
+          if (!hasPermission) {
+            return;
+          }
+        } catch (error) {
+          console.warn('Camera permission check failed, continuing anyway:', error);
+        }
+      }
+
+      // Wait for scene to be ready
+      if (scene.hasLoaded) {
+        setupAR();
+      } else {
+        scene.addEventListener('loaded', setupAR);
+        // Timeout fallback
+        setTimeout(setupAR, 3000);
+      }
+    }
+
+    function setupAR() {
+      const scene = document.querySelector('a-scene');
+      
+      // Hide loader when video is ready
+      const videoLoadedHandler = function() {
+        console.log('AR.js video loaded');
         hideLoader();
-      }, 1000);
-    });
+      };
+      window.addEventListener('arjs-video-loaded', videoLoadedHandler);
+      
+      // Fallback: hide loader after scene is loaded
+      const sceneLoadedHandler = function() {
+        console.log('Scene loaded');
+        setTimeout(function() {
+          hideLoader();
+        }, 2000);
+      };
+      
+      if (scene.hasLoaded) {
+        sceneLoadedHandler();
+      } else {
+        scene.addEventListener('loaded', sceneLoadedHandler);
+      }
+
+      // Error handling
+      const errorHandler = function(e) {
+        console.error('AR.js error:', e);
+        const loader = document.querySelector('.arjs-loader');
+        if (loader && !loader.classList.contains('hidden')) {
+          loader.innerHTML = `
+            <div class="loader-content">
+              <div class="loader-title">❌ AR Error</div>
+              <div class="loader-subtitle">Please refresh the page and ensure camera access is granted.</div>
+            </div>
+          `;
+        }
+      };
+      
+      scene.addEventListener('error', errorHandler);
+      
+      // Handle camera errors specifically
+      window.addEventListener('arjs-nft-loaded', function() {
+        console.log('AR.js NFT loaded');
+        hideLoader();
+      });
+
+      // Additional timeout fallback
+      setTimeout(function() {
+        const loader = document.querySelector('.arjs-loader');
+        if (loader && !loader.classList.contains('hidden')) {
+          console.log('Timeout fallback: hiding loader');
+          hideLoader();
+        }
+      }, 5000);
+    }
+
+    // Start initialization when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initAR);
+    } else {
+      initAR();
+    }
+
+    // Prevent default touch behaviors that might interfere
+    document.addEventListener('touchstart', function(e) {
+      if (e.touches.length > 1) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    document.addEventListener('touchmove', function(e) {
+      if (e.touches.length > 1) {
+        e.preventDefault();
+      }
+    }, { passive: false });
   </script>
 </body>
 
