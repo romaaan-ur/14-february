@@ -4,7 +4,7 @@
   "type": "module",
   "description": "",
   "scripts": {
-    "dev": "npx http-server ./",
+    "dev": "npx http-server ./ -S",
     "build": "tsc && vite build"
   },
   "keywords": [],
