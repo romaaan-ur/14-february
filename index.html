@@ -3,7 +3,8 @@
 
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -24,7 +25,8 @@
       -webkit-touch-callout: none;
     }
 
-    html, body {
+    html,
+    body {
       width: 100%;
       height: 100%;
       overflow: hidden;
@@ -101,6 +103,7 @@
       0% {
         transform: rotate(0deg);
       }
+
       100% {
         transform: rotate(360deg);
       }
@@ -122,9 +125,12 @@
     }
 
     @keyframes pulse {
-      0%, 100% {
+
+      0%,
+      100% {
         opacity: 0.9;
       }
+
       50% {
         opacity: 0.6;
       }
@@ -138,12 +144,16 @@
     }
 
     @keyframes heartbeat {
-      0%, 100% {
+
+      0%,
+      100% {
         transform: scale(1);
       }
+
       25% {
         transform: scale(1.2);
       }
+
       50% {
         transform: scale(1);
       }
@@ -154,10 +164,12 @@
         font-size: 1.5em;
         padding: 0 20px;
       }
+
       .loader-subtitle {
         font-size: 0.9em;
         padding: 0 20px;
       }
+
       .loader-spinner {
         width: 60px;
         height: 60px;
@@ -169,23 +181,13 @@
       .loader-title {
         font-size: 1.2em;
       }
+
       .loader-subtitle {
         font-size: 0.85em;
       }
     }
 
-    /* Prevent zoom on double tap and ensure full screen */
-    a-scene {
-      touch-action: none;
-      -ms-touch-action: none;
-      width: 100vw !important;
-      height: 100vh !important;
-      position: fixed !important;
-      top: 0 !important;
-      left: 0 !important;
-      margin: 0 !important;
-      padding: 0 !important;
-    }
+
 
     /* Ensure AR.js canvas and video fill the screen */
     a-scene canvas,
@@ -197,50 +199,10 @@
       left: 0 !important;
       object-fit: cover !important;
     }
-
-    /* Fix for AR.js video element */
-    #arjs-video {
-      width: 100vw !important;
-      height: 100vh !important;
-      position: fixed !important;
-      top: 0 !important;
-      left: 0 !important;
-      object-fit: cover !important;
-    }
-
-    /* Ensure AR.js container fills screen */
-    .a-canvas-container,
-    .a-canvas {
-      width: 100vw !important;
-      height: 100vh !important;
-      position: fixed !important;
-      top: 0 !important;
-      left: 0 !important;
-    }
-
-    /* Target all possible AR.js video and canvas elements */
-    video[autoplay],
-    video[playsinline],
-    canvas[data-arjs],
-    [data-arjs] video,
-    [data-arjs] canvas {
-      width: 100vw !important;
-      height: 100vh !important;
-      position: fixed !important;
-      top: 0 !important;
-      left: 0 !important;
-      object-fit: cover !important;
-    }
-
-    /* Ensure body and html don't interfere */
-    body > *:not(.arjs-loader) {
-      width: 100vw !important;
-      height: 100vh !important;
-    }
   </style>
 </head>
 
-<body style="margin: 0px; padding: 0px; overflow: hidden; width: 100%; height: 100%; position: fixed;">
+<body style="margin : 0px; overflow: hidden;">
   <div class="arjs-loader">
     <div class="loader-content">
       <div class="loader-spinner">
@@ -252,20 +214,13 @@
       <div class="loader-subtitle">Please wait while we set everything up...</div>
     </div>
   </div>
-  <a-scene 
-    vr-mode-ui="enabled: false"
-    renderer="logarithmicDepthBuffer: true; colorManagement: true"
-    arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; maxDetectionRate: 60; imageSmoothingEnabled: true;"
-    embedded
-    id="scene">
+  <a-scene arjs embedded id="scene">
     <a-assets>
-      <a-asset-item id="trex" src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/examples/image-tracking/nft/trex/scene.gltf"></a-asset-item>
+      <a-asset-item id="trex"
+        src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/examples/image-tracking/nft/trex/scene.gltf" /></a-asset-item>
     </a-assets>
     <a-marker preset="hiro">
-      <a-entity 
-        position="0 0 0" 
-        scale="0.05 0.05 0.05"
-        gltf-model="#trex">
+      <a-entity position="0 0 0" scale="0.05 0.05 0.05" gltf-model="#trex">
       </a-entity>
     </a-marker>
     <a-entity camera></a-entity>
@@ -274,8 +229,8 @@
   <script>
     // Check if device is mobile
     function isMobile() {
-      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
-             (window.innerWidth <= 768);
+      return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+        (window.innerWidth <= 768);
     }
 
     // Check if HTTPS is required (AR.js needs HTTPS on mobile except localhost)
@@ -321,7 +276,7 @@
       const loader = document.querySelector('.arjs-loader');
       if (loader) {
         loader.classList.add('hidden');
-        setTimeout(function() {
+        setTimeout(function () {
           loader.style.display = 'none';
         }, 500);
       }
@@ -361,100 +316,23 @@
       }
     }
 
-    function resizeARElements() {
-      // Get viewport dimensions
-      const vw = window.innerWidth || document.documentElement.clientWidth;
-      const vh = window.innerHeight || document.documentElement.clientHeight;
-      
-      // Resize AR.js video element (multiple selectors to catch all variations)
-      const videoSelectors = ['#arjs-video', 'video', 'a-scene video'];
-      videoSelectors.forEach(selector => {
-        const videos = document.querySelectorAll(selector);
-        videos.forEach(video => {
-          if (video) {
-            video.setAttribute('width', vw);
-            video.setAttribute('height', vh);
-            video.style.cssText = `
-              width: ${vw}px !important;
-              height: ${vh}px !important;
-              position: fixed !important;
-              top: 0 !important;
-              left: 0 !important;
-              object-fit: cover !important;
-              z-index: 1 !important;
-            `;
-          }
-        });
-      });
-      
-      // Resize canvas elements
-      const canvases = document.querySelectorAll('a-scene canvas, canvas');
-      canvases.forEach(canvas => {
-        if (canvas) {
-          canvas.setAttribute('width', vw);
-          canvas.setAttribute('height', vh);
-          canvas.style.cssText = `
-            width: ${vw}px !important;
-            height: ${vh}px !important;
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            z-index: 2 !important;
-          `;
-        }
-      });
-      
-      // Resize scene container and all AR.js containers
-      const scene = document.querySelector('a-scene');
-      if (scene) {
-        scene.style.cssText = `
-          width: ${vw}px !important;
-          height: ${vh}px !important;
-          position: fixed !important;
-          top: 0 !important;
-          left: 0 !important;
-          margin: 0 !important;
-          padding: 0 !important;
-        `;
-      }
-      
-      // Resize any AR.js containers
-      const containers = document.querySelectorAll('.a-canvas-container, .a-canvas, [data-arjs]');
-      containers.forEach(container => {
-        if (container) {
-          container.style.cssText = `
-            width: ${vw}px !important;
-            height: ${vh}px !important;
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-          `;
-        }
-      });
-      
-      console.log('AR elements resized to:', vw, 'x', vh);
-    }
-
     function setupAR() {
       const scene = document.querySelector('a-scene');
-      
+
       // Hide loader when video is ready
-      const videoLoadedHandler = function() {
-        console.log('AR.js video loaded');
-        // resizeARElements();
+      const videoLoadedHandler = function () {
         hideLoader();
       };
+
       window.addEventListener('arjs-video-loaded', videoLoadedHandler);
-      
+
       // Fallback: hide loader after scene is loaded
-      const sceneLoadedHandler = function() {
-        console.log('Scene loaded');
-        // resizeARElements();
-        setTimeout(function() {
+      const sceneLoadedHandler = function () {
+        setTimeout(function () {
           hideLoader();
         }, 2000);
       };
-      
+
       if (scene.hasLoaded) {
         sceneLoadedHandler();
       } else {
@@ -462,7 +340,7 @@
       }
 
       // Error handling
-      const errorHandler = function(e) {
+      const errorHandler = function (e) {
         console.error('AR.js error:', e);
         const loader = document.querySelector('.arjs-loader');
         if (loader && !loader.classList.contains('hidden')) {
@@ -474,19 +352,16 @@
           `;
         }
       };
-      
+
       scene.addEventListener('error', errorHandler);
-      
+
       // Handle camera errors specifically
-      window.addEventListener('arjs-nft-loaded', function() {
-        console.log('AR.js NFT loaded');
-        // resizeARElements();
+      window.addEventListener('arjs-nft-loaded', function () {
         hideLoader();
       });
 
       // Additional timeout fallback
-      setTimeout(function() {
-        // resizeARElements();
+      setTimeout(function () {
         const loader = document.querySelector('.arjs-loader');
         if (loader && !loader.classList.contains('hidden')) {
           hideLoader();
@@ -500,19 +375,6 @@
     } else {
       initAR();
     }
-
-    // Prevent default touch behaviors that might interfere
-    document.addEventListener('touchstart', function(e) {
-      if (e.touches.length > 1) {
-        e.preventDefault();
-      }
-    }, { passive: false });
-
-    document.addEventListener('touchmove', function(e) {
-      if (e.touches.length > 1) {
-        e.preventDefault();
-      }
-    }, { passive: false });
   </script>
 </body>
 
