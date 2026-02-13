@@ -174,10 +174,68 @@
       }
     }
 
-    /* Prevent zoom on double tap */
+    /* Prevent zoom on double tap and ensure full screen */
     a-scene {
       touch-action: none;
       -ms-touch-action: none;
+      width: 100vw !important;
+      height: 100vh !important;
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    /* Ensure AR.js canvas and video fill the screen */
+    a-scene canvas,
+    a-scene video {
+      width: 100vw !important;
+      height: 100vh !important;
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      object-fit: cover !important;
+    }
+
+    /* Fix for AR.js video element */
+    #arjs-video {
+      width: 100vw !important;
+      height: 100vh !important;
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      object-fit: cover !important;
+    }
+
+    /* Ensure AR.js container fills screen */
+    .a-canvas-container,
+    .a-canvas {
+      width: 100vw !important;
+      height: 100vh !important;
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+    }
+
+    /* Target all possible AR.js video and canvas elements */
+    video[autoplay],
+    video[playsinline],
+    canvas[data-arjs],
+    [data-arjs] video,
+    [data-arjs] canvas {
+      width: 100vw !important;
+      height: 100vh !important;
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      object-fit: cover !important;
+    }
+
+    /* Ensure body and html don't interfere */
+    body > *:not(.arjs-loader) {
+      width: 100vw !important;
+      height: 100vh !important;
     }
   </style>
 </head>
@@ -197,7 +255,7 @@
   <a-scene 
     vr-mode-ui="enabled: false"
     renderer="logarithmicDepthBuffer: true; colorManagement: true"
-    arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; maxDetectionRate: 60; canvasWidth: 640; canvasHeight: 480; imageSmoothingEnabled: true;"
+    arjs="trackingMethod: best; sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; maxDetectionRate: 60; imageSmoothingEnabled: true;"
     embedded
     id="scene">
     <a-assets>
@@ -303,12 +361,87 @@
       }
     }
 
+    function resizeARElements() {
+      // Get viewport dimensions
+      const vw = window.innerWidth || document.documentElement.clientWidth;
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      
+      // Resize AR.js video element (multiple selectors to catch all variations)
+      const videoSelectors = ['#arjs-video', 'video', 'a-scene video'];
+      videoSelectors.forEach(selector => {
+        const videos = document.querySelectorAll(selector);
+        videos.forEach(video => {
+          if (video) {
+            video.setAttribute('width', vw);
+            video.setAttribute('height', vh);
+            video.style.cssText = `
+              width: ${vw}px !important;
+              height: ${vh}px !important;
+              position: fixed !important;
+              top: 0 !important;
+              left: 0 !important;
+              object-fit: cover !important;
+              z-index: 1 !important;
+            `;
+          }
+        });
+      });
+      
+      // Resize canvas elements
+      const canvases = document.querySelectorAll('a-scene canvas, canvas');
+      canvases.forEach(canvas => {
+        if (canvas) {
+          canvas.setAttribute('width', vw);
+          canvas.setAttribute('height', vh);
+          canvas.style.cssText = `
+            width: ${vw}px !important;
+            height: ${vh}px !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            z-index: 2 !important;
+          `;
+        }
+      });
+      
+      // Resize scene container and all AR.js containers
+      const scene = document.querySelector('a-scene');
+      if (scene) {
+        scene.style.cssText = `
+          width: ${vw}px !important;
+          height: ${vh}px !important;
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        `;
+      }
+      
+      // Resize any AR.js containers
+      const containers = document.querySelectorAll('.a-canvas-container, .a-canvas, [data-arjs]');
+      containers.forEach(container => {
+        if (container) {
+          container.style.cssText = `
+            width: ${vw}px !important;
+            height: ${vh}px !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+          `;
+        }
+      });
+      
+      console.log('AR elements resized to:', vw, 'x', vh);
+    }
+
     function setupAR() {
       const scene = document.querySelector('a-scene');
       
       // Hide loader when video is ready
       const videoLoadedHandler = function() {
         console.log('AR.js video loaded');
+        resizeARElements();
         hideLoader();
       };
       window.addEventListener('arjs-video-loaded', videoLoadedHandler);
@@ -316,6 +449,7 @@
       // Fallback: hide loader after scene is loaded
       const sceneLoadedHandler = function() {
         console.log('Scene loaded');
+        resizeARElements();
         setTimeout(function() {
           hideLoader();
         }, 2000);
@@ -326,6 +460,22 @@
       } else {
         scene.addEventListener('loaded', sceneLoadedHandler);
       }
+
+      // Resize on orientation change and periodically check
+      window.addEventListener('resize', resizeARElements);
+      window.addEventListener('orientationchange', function() {
+        setTimeout(resizeARElements, 200);
+      });
+      
+      // Periodically check and resize (in case AR.js creates elements later)
+      const resizeInterval = setInterval(function() {
+        resizeARElements();
+      }, 500);
+      
+      // Stop checking after 10 seconds
+      setTimeout(function() {
+        clearInterval(resizeInterval);
+      }, 10000);
 
       // Error handling
       const errorHandler = function(e) {
@@ -346,11 +496,13 @@
       // Handle camera errors specifically
       window.addEventListener('arjs-nft-loaded', function() {
         console.log('AR.js NFT loaded');
+        resizeARElements();
         hideLoader();
       });
 
       // Additional timeout fallback
       setTimeout(function() {
+        resizeARElements();
         const loader = document.querySelector('.arjs-loader');
         if (loader && !loader.classList.contains('hidden')) {
           console.log('Timeout fallback: hiding loader');
