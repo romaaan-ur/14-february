@@ -441,7 +441,7 @@
       // Hide loader when video is ready
       const videoLoadedHandler = function() {
         console.log('AR.js video loaded');
-        resizeARElements();
+        // resizeARElements();
         hideLoader();
       };
       window.addEventListener('arjs-video-loaded', videoLoadedHandler);
@@ -449,7 +449,7 @@
       // Fallback: hide loader after scene is loaded
       const sceneLoadedHandler = function() {
         console.log('Scene loaded');
-        resizeARElements();
+        // resizeARElements();
         setTimeout(function() {
           hideLoader();
         }, 2000);
@@ -460,22 +460,6 @@
       } else {
         scene.addEventListener('loaded', sceneLoadedHandler);
       }
-
-      // Resize on orientation change and periodically check
-      window.addEventListener('resize', resizeARElements);
-      window.addEventListener('orientationchange', function() {
-        setTimeout(resizeARElements, 200);
-      });
-      
-      // Periodically check and resize (in case AR.js creates elements later)
-      const resizeInterval = setInterval(function() {
-        resizeARElements();
-      }, 500);
-      
-      // Stop checking after 10 seconds
-      setTimeout(function() {
-        clearInterval(resizeInterval);
-      }, 10000);
 
       // Error handling
       const errorHandler = function(e) {
@@ -496,16 +480,15 @@
       // Handle camera errors specifically
       window.addEventListener('arjs-nft-loaded', function() {
         console.log('AR.js NFT loaded');
-        resizeARElements();
+        // resizeARElements();
         hideLoader();
       });
 
       // Additional timeout fallback
       setTimeout(function() {
-        resizeARElements();
+        // resizeARElements();
         const loader = document.querySelector('.arjs-loader');
         if (loader && !loader.classList.contains('hidden')) {
-          console.log('Timeout fallback: hiding loader');
           hideLoader();
         }
       }, 5000);
